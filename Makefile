@@ -1,7 +1,10 @@
 SCRIPTS_DIRECTORY ?= $(abspath $(CURDIR)/../scripts)
 MIX ?= /Users/abby/.local/share/mise/shims/mix
 
-.PHONY: setup help deps test credo dialyzer coverage check format clean release publish-release setup-hooks setup-db reset-db logs push-and-publish
+.PHONY: setup help deps test dialyzer coverage check format clean release publish-release setup-hooks setup-db reset-db logs push-and-publish
+
+_compile-impl:
+	$(MIX) compile
 
 help:
 	@echo "Memory Synthesizer Bot"
@@ -67,9 +70,6 @@ deps:
 
 test:
 	$(MIX) test
-
-credo:
-	$(MIX) credo
 
 dialyzer: deps
 	$(MIX) dialyzer
@@ -221,3 +221,12 @@ verify-bot-nats:
 	}; \
 	BOT_NAME=$$(basename $$(pwd) | sed 's/bot_army_//'); \
 	$(MAKE) -C "$$MONOREPO_ROOT" verify-bot-nats BOT=$$BOT_NAME
+
+# Shared targets (push, credo, pre-push-cleanup, bump-version, git-push).
+# Defined once in bot_army_infra so they cannot drift per repo.
+BOT_ARMY_COMMON_MK := $(abspath $(CURDIR)/../bot_army_infra/make/common.mk)
+ifeq ($(wildcard $(BOT_ARMY_COMMON_MK)),)
+$(warning bot_army_infra not found at $(BOT_ARMY_COMMON_MK) - shared targets unavailable)
+else
+include $(BOT_ARMY_COMMON_MK)
+endif
